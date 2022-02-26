@@ -1,0 +1,981 @@
+---基础语法系列
+	--语言的一般思想
+		基准代码、依赖、配置、后端服务、构建发布运行、进程、端口绑定、并发、易处理、开发环境与线上环境等价、日志、管理进程
+	--go语言的差异性
+		不支持函数重载和操作符重载
+		为了避免在C/C++开发中的一些bug和混乱，不支持隐式转换
+		支持接口抽象，不支持继承
+		不支持动态加载代码
+		不支持动态链接库
+		通过recover和panic来替代异常机制
+		不支持断言
+		不支持静态变量
+	--go语言安装部署
+		下载：https://golang.google.cn/dl/
+		配置环境变量：GOROOT GOPATH GOOS GOARCH export GOPROXY=https://goproxy.cn(解决依赖下载问题)
+	--go语言基本命令
+		bug         start a bug report
+	    build       compile packages and dependencies
+	    clean       remove object files and cached files
+	    doc         show documentation for package or symbol
+	    env         print Go environment information
+	    fix         update packages to use new APIs
+	    fmt         gofmt (reformat) package sources
+	    generate    generate Go files by processing source
+	    get         add dependencies to current module and install them
+	    install     compile and install packages and dependencies
+	    list        list packages or modules
+	    mod         module maintenance
+	    run         compile and run Go program
+	    test        test packages
+	    tool        run specified go tool
+	    version     print Go version
+	    vet         report likely mistakes in packages
+		
+		备注：
+		1、go build编译时设置操作系统和CPU架构
+		go build -o /xxx/ .
+		GOOS=linux GOARCH=amd64
+		2、go test命令
+		go test ./… -v 运行测试
+        go test命令扫描所有*_test.go为结尾的文件，惯例是将测试代码与正式代码放在同目录，如 foo.go 的测试代码一般写在 foo_test.go
+		3、go vet
+		预检查命令，代码静态检查，发现可能的bug或者可疑的构造
+	--go在线学习运行环境
+	    官方：https://play.golang.org/
+	    国内：https://goplay.tools/
+	--控制结构
+		-if语句
+			if condition1 {
+				执行体
+			}else if condition2 {
+				执行体
+			}else {
+				执行体
+			}
+			
+			注：同for一样，if语句也可以在条件表达式的前面执行一个简单的语句
+				if v:=x - 100;v<0{return v}
+		-switch语句
+			switch var1 {
+				case val1: //空分支
+				case val2:
+					fallthrough //执行case3中的f()
+				case val3:
+					f()
+				default: //默认分支
+					...
+			}
+		-for语句
+			Go 只有一种循环结构：for 循环。
+			计入计数器的循环
+				for 初始化语句; 条件语句; 修饰语句 {}
+				for i := 0; i < 10; i++ {
+					sum += i 
+				} 
+			初始化语句和后置语句是可选的，此场景与 while 等价（Go 语言不支持 while）
+				for ; sum < 1000; {
+					sum += sum
+				}
+			无限循环
+				for {
+					if condition1 {
+					break
+					}
+				}
+		-for-range
+			遍历数组，切片，字符串，Map等
+			for index,char := range myString {
+				...
+			}
+			for key,value := range MyMap {
+				...
+			}
+			for index,value := range MyArray {
+				...
+			}
+			注：如果for range遍历指针数组，则value取出的指针地址为原指针地址的拷贝
+	--常用数据结构
+		-变量与常量
+			变量：var identifier type
+				变量
+					• var 语句用于声明一个变量列表，跟函数的参数列表一样，类型在最后。
+					• var c, python, java bool
+				变量的初始化
+					• 变量声明可以包含初始值，每个变量对应一个。
+					• 如果初始化值已存在，则可以省略类型；变量会从初始值中获得类型。
+					• var i, j int = 1, 2
+				短变量声明
+					• 在函数中，简洁赋值语句 := 可在类型明确的地方代替 var 声明。
+					• 函数外的每个语句都必须以关键字开始（var, func 等等），因此 := 结构不能在函数外使用。
+					• c, python, java := true, false, "no!"
+			常量：const identifier type
+			
+		-类型转换与推导
+			类型转换
+				• 表达式 T(v) 将值 v 转换为类型 T。 
+					一些关于数值的转换：
+						var i int = 42 
+						var f float64 = float64(i) 
+						var u uint = uint(f)
+					或者，更加简单的形式：
+						i := 42 
+						f := float64(i) l u := uint(f)
+			类型推导
+				• 在声明一个变量而不指定其类型时（即使用不带类型的 := 语法或 var = 表达式语法），变量的类型由右值推导得出。
+					var i int 
+					j := i // j 也是一个 int
+		-数组
+			定义：var identifier [len]type
+			示例：myArray := [3]int{1,2,3}
+		-切片
+			概念：切片是对数组一个连续片段的引用，数组定义中不指定长度即为切片
+			定义：var identifier []type
+			切片原理：
+				SLICE[A:]  // 从A切到最尾部
+				SLICE[:B]  // 从最开头切到B(不包含B)
+				SLICE[:]   // 从头切到尾，等价于复制整个SLICE
+		-make和new
+			make()比new()函数多一些操作，new()函数只会进行内存分配并做默认的赋0初始化，而make()可以先为底层数组分配好内存，然后从这个底层数组中再额外生成一个slice并初始化。另外，make只能构建slice、map和channel这3种结构的数据对象，因为它们都指向底层数据结构，都需要先为底层数据结构分配好内存并初始化。
+		-map
+			定义：var map1 map[keytype]valuetype
+			示例：
+				myMap := make(map[string]string, 10)
+				myMap["a"] = "b"
+				myFuncMap := map[string]func() int{
+					"funcA": func() int {
+						return 1 
+					},
+				}
+				fmt.Println(myFuncMap)
+				f := myFuncMap["funcA"]
+				fmt.Println(f())
+			取值：
+				value, exists := myMap["a"]
+				if exists {
+					println(value)
+				}
+				//遍历 Map
+				for k, v := range myMap {
+					println(k, v)
+				}
+		-结构体和指针
+			定义：通过type ... struct关键字自定义结构体
+			特点：go语言支持指针，但是不支持指针运算。指针变量的值为内存地址，未赋值的指针为nil
+			示例：
+				type MyType struct {
+					Name string
+				}
+				func printMyType(t *MyType){
+					println(t.Name) }
+				func main(){
+					t := MyType{Name: "test"}
+					printMyType(&t)
+				}
+		-结构体标签
+			定义：通过结构体标签json tag给到结构体附加属性或者预设值，然后利用反射机制来利用
+			示例：
+				type MyType struct {
+					Name string `json:"name"`
+				}
+				func main() {
+					mt := MyType{Name: "test"}
+					myType := reflect.TypeOf(mt)
+					name := myType.Field(0)
+					tag := name.Tag.Get("json")
+					println(tag)
+				}
+		-类型重命名
+			定义：通过利用结构体来给类型重命名
+			示例：实现枚举
+				type ServiceType string
+				const (
+					ServiceTypeClusterIP    ServiceType = "ClusterIP"
+					ServiceTypeNodePort     ServiceType = "NodePort"
+					ServiceTypeLoadBalancer ServiceType = "LoadBalancer"
+					ServiceTypeExternalName ServiceType = "ExternalName"
+				)
+				
+				func printMenu(t ServiceType) {
+					println(t)
+				}
+				func main() {
+					printMenu(ServiceTypeClusterIP)
+				}
+				
+	--函数方法接口
+		-mian函数
+			每个 Go 语言程序都应该有个 main package，Main package 里的 main 函数是 Go 语言程序入口
+		-参数解析
+			main 函数与其他语言不同，没有类似 java 的 []string args 参数
+			使用方法：
+				方法1：fmt.Println("os args is:", os.Args)
+				方法2：name := flag.String("name", "world", "specify the name you want to say hi")
+					   flag.Parse()
+		-init函数
+			在包初始化时运行[引入包(若引入了其他包则会先执行其他包中，引入常量--->引入变量--->init--->main)--->引入常量--->引入变量--->init--->main]，当多个依赖项目引用统一项目，且被引用项目的初始化在 init 中完成，并且不可重复运行时，会导致启动错误
+		-返回值
+			•多值返回
+				• 函数可以返回任意数量的返回值
+			• 命名返回值
+				• Go 的返回值可被命名，它们会被视作定义在函数顶部的变量。
+				• 返回值的名称应当具有一定的意义，它可以作为文档使用。
+				• 没有参数的 return 语句返回已命名的返回值。也就是直接返回。
+			• 调用者忽略部分返回值
+				• result, _ = strconv.Atoi(origStr)  //通过_来忽略返回的部分值
+		-传递变长参数
+			Go 语言中的可变长参数允许调用方传递任意多个相同类型的参数
+			• 函数定义
+				func append(slice []Type, elems ...Type) []Type
+			• 调用方法
+				myArray := []string{}
+				myArray = append(myArray, "a","b","c")
+		-内置函数
+			close 					管道关闭
+			len, cap 				返回数组、切片，Map 的长度或容量
+			new, make 				内存分配
+			copy, append 			操作切片
+			panic, recover 			错误处理
+			print, println 			打印
+			complex, real, imag 	操作复数
+		-回调函数
+			函数作为参数传入其它函数，并在其他函数内部调用执行。使用这种方式可以形成多态，调用一个函数可以实现多个函数的功能，取决于入参函数本身
+			示例：
+				func main() {
+					DoOperation(1, increase)
+					DoOperation(1, decrease)
+				}
+				func increase(a, b int) {
+					println(“increase result is:”, a+b) }
+				func DoOperation(y int, f func(int, int)) {
+					f(y, 1) }
+				func decrease(a, b int) {
+					println("decrease result is:", a-b)
+				}
+		-闭包---减少两个函数共用变量的作用域，作为函数的引用
+			匿名函数：
+				• 不能独立存在
+				• 可以赋值给其他变量
+					x:= func(){}
+				• 可以直接调用
+					func(x,y int){println(x+y)}(1,2)
+				• 可作为函数返回值
+					func Add() (func(b int) int)
+			使用场景：
+				defer func() {
+					if r := recover(); r != nil {
+					println(“recovered in FuncX”) }
+				}()
+			备注：
+				闭包是通过地址引用来引用环境中的变量value，因此每次只是把value的地址拷贝了一份，所以遍历打印时，最后一个值地址覆盖了前面的，所以值都是最后一个重复多次
+				defer修饰的函数会将传入它的参数拷贝保存在自己的内存区域，等到函数返回时，才开始执行。defer是先进后出的。所以当遍历打印时，最后结果是倒序输出的
+		-方法
+			方法：作用在接收者上的函数，有固定的接收者。可以理解为特定对象行为的结果，是一种特殊的函数。
+				func (recv receiver_type) methodName(parameter_list) (return_value_list)
+		-关于参数传递是传值还是传指针
+			• Go 语言只有一种规则-传值
+			• 函数内修改参数的值不会影响函数外原始变量的值
+			• 可以传递指针参数将变量地址传递给调用函数，Go 语言会
+			• 复制该指针作为函数内的地址，但指向同一地址
+		-接口
+			• 接口定义一组方法集合，可以理解为暂不确定的一组对象行为的实现
+				type IF interface {
+					Method1(param_list) return_type
+				} 
+			• 适用场景：Kubernetes 中有大量的接口抽象和多种实现
+			• Struct 无需显示声明实现 interface，只需直接实现方法
+			• Struct 除实现 interface 定义的接口外，还可以有额外的方法
+			• 一个类型可实现多个接口（Go 语言的多重继承）
+			• Go 语言中接口不接受属性定义
+			• 接口可以嵌套其他接口
+			注：
+				• Interface 是可能为 nil 的，所以针对 interface 的使用一定要预先判空，否则会引起程序 crash(nil panic)
+				• Struct 初始化意味着空间分配，对 struct 的引用不会出现空指针
+		-反射机制
+			• reflect.TypeOf ()返回被检查对象的类型
+			• reflect.ValueOf()返回被检查对象的值
+			• 示例
+				myMap := make(map[string]string, 10)
+				myMap["a"] = "b"
+				t := reflect.TypeOf(myMap)
+				fmt.Println("type:", t)
+				v := reflect.ValueOf(myMap)
+				fmt.Println("value:", v)
+		-基于struct的反射
+			// struct
+			myStruct := T{A: "a"}
+			v1 := reflect.ValueOf(myStruct)
+			for i := 0; i < v1.NumField(); i++ {
+				fmt.Printf("Field %d: %v\n", i, v1.Field(i))
+			}
+			for i := 0; i < v1.NumMethod(); i++ {
+				fmt.Printf("Method %d: %v\n", i, v1.Method(i))
+			}
+			// 需要注意 receive 是 struct 还是指针
+			result := v1.Method(0).Call(nil)
+			fmt.Println("result:", result)
+		-面向对象编程
+			• 可见性控制
+				• public - 常量、变量、类型、接口、结构、函数等的名称大写
+				• private - 非大写就只能在包内使用
+			• 继承
+				• 通过组合实现，内嵌一个或多个 struct
+			• 多态
+				• 通过接口实现，通过接口定义方法集，编写多套实现
+		-json编解码
+			• Unmarshal: 从 string 转换至 struct
+			func unmarshal2Struct(humanStr string)Human {
+				h := Human{}
+				err := json.Unmarshal([]byte(humanStr), &h)
+				if err != nil {
+					println(err)
+				}
+				return h 
+			}
+			• Marshal: 从 struct 转换至 string
+			func marshal2JsonString(h Human) string {
+				h.Age = 30
+				updatedBytes, err := json.Marshal(&h)
+				if err != nil {
+					println(err)
+				}
+				return string(updatedBytes) 
+			}
+			• json 包使用 map[string]interface{} 和 []interface{} 类型保存任意对象
+			• 可通过如下逻辑解析任意 json
+				var obj interface{}
+				err := json.Unmarshal([]byte(humanStr), &obj)
+				objMap, ok := obj.(map[string]interface{})
+				for k, v := range objMap {
+					switch value := v.(type) {
+					case string:
+						fmt.Printf("type of %s is string, value is %v\n", k, value)
+					case interface{}:
+						fmt.Printf("type of %s is interface{}, value is %v\n", k, value)
+					default:
+						fmt.Printf("type of %s is wrong, value is %v\n", k, value)
+					}
+				}
+	--常用语法
+		-错误处理
+			• Go 语言无内置 exception 机制，只提供 error 接口供定义错误
+				type error interface {
+					Error() string
+				} 
+			• 可通过 errors.New 或 fmt.Errorf 创建新的 error
+				var errNotFound error = errors.New("NotFound")
+			• 通常应用程序对 error 的处理大部分是判断error 是否为 nil，如需将 error 归类，通常交给应用程序自定义
+		-defer
+			• 函数返回之前执行某个语句或函数
+				• 等同于 Java 和 C# 的 finally
+			• 常见的 defer 使用场景：记得关闭你打开的资源
+				• defer file.Close()
+				• defer mu.Unlock()
+				• defer println("")
+		-panic和recover
+			• panic: 可在系统出现不可恢复错误时主动调用 panic, panic 会使当前线程直接 crash
+			• defer: 保证执行并把控制权交还给接收到 panic 的函数调用者
+			• recover: 函数从 panic 或 错误场景中恢复
+				defer func() {
+					fmt.Println("defer func is called")
+					if err := recover(); err != nil {
+						fmt.Println(err)
+					}
+				}()
+				panic("a panic is triggered")
+			
+	--多线程
+		-并发和并行
+			• 两个或多个事件单位时间内发生，称为并发
+			• 两个或者多个事件在同一时刻发生
+		-协程
+			• 进程：
+				• 分配系统资源（CPU 时间、内存等）基本单位
+				• 有独立的内存空间，切换开销大
+			• 线程：进程的一个执行流，是 CPU 调度并能独立运行的的基本单位
+				• 同一进程中的多线程共享内存空间，线程切换代价小
+				• 多线程通信方便
+				• 从内核层面来看线程其实也是一种特殊的进程，它跟父进程共享了打开的文件和文件系统信息，共享了地址空间和信号处理函数
+			• 协程
+				• Go 语言中的轻量级线程实现
+				• Golang 在 runtime、系统调用等多方面对 goroutine 调度进行了封装和处理，当遇到长时间执行或者进行系统调用时，会主动把当前 goroutine 的 CPU (P) 转让出去，让其他 goroutine 能被调度并执行，也就是 Golang 从语言层面支持了协程。
+		-Communicating Sequential Process
+			• CSP
+				• 描述两个独立的并发实体通过共享的通讯 channel 进行通信的并发模型。
+			• Go 协程 goroutine
+				• 是一种轻量线程，它不是操作系统的线程，而是将一个操作系统线程分段使用，通过调度器实现协作式调度。
+				• 是一种绿色线程，微线程，它与 Coroutine 协程也有区别，能够在发现堵塞后启动新的微线程。
+			• 通道 channel
+				• 类似 Unix 的 Pipe，用于协程之间通讯和同步。协程之间虽然解耦，但是它们和 Channel 有着耦合。
+		-线程和协程的差异
+			• 每个 goroutine (协程) 默认占用内存远比 Java 、C 的线程少
+				• goroutine：2KB
+				• 线程：8MB
+			• 线程 goroutine 切换开销方面，goroutine 远比线程小
+				• 线程：涉及模式切换(从用户态切换到内核态)、16个寄存器、PC、SP...等寄存器的刷新
+				• goroutine：只有三个寄存器的值修改 - PC / SP / DX.
+			• GOMAXPROCS
+				• 控制并行线程数量
+		-协程使用示例
+			go functionName()
+			
+			for i := 0; i < 10; i++ {
+				go fmt.Println(i)
+			}
+			time.Sleep(time.Second)
+		-channel - 多线程通信
+			• Channel 是多个协程之间通讯的管道
+				• 一端发送数据，一端接收数据
+				• 同一时间只有一个协程可以访问数据，无共享内存模式可能出现的内存竞争
+				• 协调协程的执行顺序
+			• 声明方式
+				• var identifier chan datatype
+				• 操作符<-
+			• 示例
+				ch := make(chan int)
+				go func() {
+					fmt.Println("hello from goroutine")
+					ch <- 0 //数据写入Channel
+				}()
+				i := <-ch//从Channel中取数据并赋值
+		-channel缓冲
+			• 基于 Channel 的通信是同步的
+			• 当缓冲区满时，数据的发送是阻塞的
+			• 通过 make 关键字创建通道时可定义缓冲区容量，默认缓冲区容量为 0
+			• ch := make(chan int,10)，实际就是给channel容量定义
+			• 使用示例
+				ch := make(chan int, 10)
+				go func() {
+					for i := 0; i < 10; i++ {
+						rand.Seed(time.Now().UnixNano())
+						n := rand.Intn(10) // n will be between 0 and 10
+						fmt.Println("putting: ", n)
+						ch <- n 
+						}
+					close(ch)
+				}()
+				fmt.Println("hello from main")
+				for v := range ch {
+					fmt.Println("receiving: ", v)
+				}
+		-单向通道
+			• 只发送通道
+				• var sendOnly chan<- int
+			• 只接收通道
+				• var readOnly <-chan int
+			• Istio webhook controller
+				• func (w *WebhookCertPatcher) runWebhookController(stopChan <-chan struct{}) {}
+			• 如何用: 双向通道转换
+				var c = make(chan int) 
+				go prod(c)
+				go consume(c)
+				func prod(ch chan<- int){
+					for { ch <- 1 } 
+				}
+				func consume(ch <-chan int) {
+					for { <-ch }
+				}
+			注：实际上就是给双向通道加上单方向符号
+		-关闭通道
+			• 通道无需每次关闭
+			• 关闭的作用是告诉接收者该通道再无新数据发送
+			• 只有发送方需要关闭通道
+			ch := make(chan int)
+			defer close(ch)
+			if v, notClosed := <-ch; notClosed {
+				fmt.Println(v)
+			}
+			注：以上代码意思就是通过最后返回值的判断来接收最后一个值，v为通道值，notClosed为是否还有数值判断结果，如果为true则打印最后一个值
+		-select
+			• 当多个协程同时运行时，可通过 select 轮询多个通道
+			• 如果所有通道都阻塞则等待，如定义了 default 则执行 default
+			• 如多个通道就绪则随机选择
+			select {
+				case v:= <- ch1:
+					...
+				case v:= <- ch2:
+					...
+				default: 
+					...
+			}
+		-定时器Timer
+			• time.Ticker 以指定的时间间隔重复的向通道 C 发送时间值
+			• 使用场景
+				• 为协程设定超时时间
+					timer := time.NewTimer(time.Second)
+					select {
+					// check normal channel
+						case <-ch:
+							fmt.Println("received from ch")
+						case <-timer.C:
+							fmt.Println("timeout waiting from channel ch")
+					}
+		-上下文context
+			• 超时、取消操作或者一些异常情况，往往需要进行抢占操作或者中断后续操作
+			• Context 是设置截止日期、同步信号，传递请求相关值的结构体
+				type Context interface {
+					Deadline() (deadline time.Time, ok bool)
+					Done() <-chan struct{}
+					Err() error
+					Value(key interface{}) interface{}
+				}
+			• 用法
+				• context.Background
+					• Background 通常被用于主函数、初始化以及测试中，作为一个顶层的 context，也就是说一般我们创建的 context 都是基于 Background
+				• context.TODO
+					• TODO 是在不确定使用什么 context 的时候才会使用
+				• context.WithDeadline
+					• 超时时间
+				• context.WithValue
+					• 向 context 添加键值对
+				• context.WithCancel
+					• 创建一个可取消的 context
+		-停止一个协程
+			• 通过return
+				done := make(chan bool)
+				go func() {
+					for {
+						select {
+							case <-done:
+								fmt.Println("done channel is triggerred, exit child go routine")
+								return
+						}
+					}
+				}()
+				close(done)
+			• 基于context停止协程
+				Context 是 Go 语言对 go routine 和 timer 的封装
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				defer cancel()
+				go process(ctx, 100*time.Millisecond) <-ctx.Done()
+				fmt.Println("main:", ctx.Err())
+				
+---线程加锁和内存管理
+	--锁
+		go语言中不仅仅提供基于CSP的通讯模型，也支持基于共享内存的多线程数据访问
+		sync包提供了锁的基本原语：
+			• sync.Mutex互斥锁
+				• Lock()加锁，Unlock()解锁
+			• sync.RWMutex读写分离锁
+				• 不限制并发读，只限制并发写和并发读写
+			• sync.WaitGroup
+				• 等待一组goroutine返回
+			• sync.Once
+				• 保证某段代码只执行一次
+			• sync.Cond
+				• 让一组goroutine在满足特定条件时被唤醒
+		-Mutex示例
+			func (f *sharedInformerFactory) Start(stopCh <-chan struct{}) {
+				f.lock.Lock()
+				defer f.lock.Unlock()
+				for informerType, informer := range f.informers {
+					if !f.startedInformers[informerType] {
+						go.informer.Run(sttopCh)
+						f.startedInformers[informerType] = true
+					}
+				}
+			}
+		-WaitGroup示例
+			func (c *PodClient) CreateBatch(pods []*v1.Pod) []*v1.pod {
+				ps := make([]*v1.pod,len(pods))
+				var wg sync.WaitGroup
+				for i,pod := range pods {
+					wg.Add(1)
+					go func(i int,pod *v1.Pod) {
+						defer wg.Done()
+						defer GinkgoRecover()
+						ps[i] = c.CreateSync(pod)
+					}(i,pod)
+				}
+				wg.Wait()
+				return ps
+			}
+		-Cond示例
+			func(q *Type) Add(item interface{}) {
+				q.cond.L.Lock()
+				defer q.cond.L.Unlock()
+				if q.shuttingDown {
+					return
+				}
+				if q.dirty.has(item) {
+					return
+				}
+				q.metrics.add(item)
+				q.dirty.insert(item)
+				if q.processing.has(item) {
+					return
+				}
+				q.queue = append(q.queue,item)
+				q.cond.Signal()
+			}
+			
+			func(q *Type) Get() (item interface{},shutdown bool) {
+				q.cond.L.Lock()
+				defer q.cond.L.Unlock()
+				for len(q.queue) == 0 && !q.shuttingDown {
+					q.cond.Wait()
+				}
+				if len(q.queue) == 0 {
+					return nil,true
+				}
+				item,q.queue = q.queue[0],q.queue[1:]
+				q.metrics.get(item)
+				q.processing.insert(item)
+				q.dirty.delete(item)
+				return item,false
+			}
+			注：[[
+				cond的主要作用就是获取锁之后，wait()方法会等待一个通知，来进行下一步锁释放等操作，以此控制锁合适释放，释放频率。即使用Wait()的方法来控制何时去竞争锁，就像是使用了一个“双开关”一样条件变量的作用并不是保证在同一时刻仅有一个线程访问某一个共享数据，而是在对应的共享数据的状态发生变化时，通知其他因此而被阻塞的线程。
+				type Cond struct { // 在观测或更改条件时L会冻结
+					L Locker       // 包含隐藏或非导出字段
+				}
+				Cond实现了一个构建在锁的基础上的条件变量，一个线程集合地，供线程等待或者宣布某事件的发生。每个Cond实例都有一个相关的锁Locker（一般是*Mutex或*RWMutex类型的值），它必须在改变条件时或者调用Wait方法时保持锁定，即在调用Wait()等方法前一定要先调用cond.L.Lock()先进行上锁。Cond可以创建为其他结构体的字段，Cond在开始使用后不能被拷贝。
+			]]
+	--线程调度
+		• 进程：资源分配的基本单位
+		• 线程：调度的基本单位
+		• 无论是线程还是进程，在 linux 中都以 task_struct 描述，从内核角度看，与进程无本质区别
+		• Glibc 中的 pthread 库提供 NPTL（Native POSIX Threading Library）支持
+	--linux进程内存
+		基本构成：
+			物理内存-->内存页表项(PGD,PUD,PMD,PT)-->虚拟地址
+		虚拟地址：
+			kernel space-->参数环境变量-->stack-->未分配内存-->heap-->BSS(未初始化数据段)-->Date(初始化数据)-->Text(程序代码)
+			注：Stack分配从上往下，heap分配从下往上
+		内存管理单元：
+			Memory Management Unit(MMU)单元,管理着虚拟地址与物理地址的映射关系
+			Translation Lookaside Buffer(TLB),缓存虚拟地址和物理地址的映射关系
+		进程切换开销：
+			• 直接开销
+				• 切换页表全局目录（PGD） • 切换内核态堆栈
+				• 切换硬件上下文（进程恢复前，必须装入寄存器的数据统称为硬件上下文）
+				• 刷新 TLB
+				• 系统调度器的代码执行
+			• 间接开销
+				• CPU 缓存失效导致的进程需要到内存直接访问的 IO 操作变多
+		线程切换开销：
+			与进程类似，少了线程共享内存虚拟地址空间的切换开销
+	--goroutine
+		Go 语言基于 GMP 模型实现用户态线程
+			• Goroutine：表示 goroutine，每个 goroutine 都有自己的栈空间，定时器，初始化的栈空间在 2k 左右，空间会随着需求增长。
+			• Machine：抽象化代表内核线程，记录内核线程栈信息，当goroutine 调度到线程时，使用该 goroutine 自己的栈信息。
+			• Process：代表调度器，负责调度 goroutine，维护一个本地goroutine 队列，M 从 P 上获得 goroutine 并执行，同时还负责部分内存的管理。
+	--GMP模型
+		KSE: kernel scheduling entity内核调度实体，处于内核态。可以理解为内核进程调度实体，对应相应的taskStruct
+		M: 抽象化代表内核线程，记录内核线程栈信息，跟内核调度实体一一对应
+		P: golang调度器，绑定M负责goroutine运行的调度
+		G: golang协程调度最小单位，拥有各自的栈空间，由P来统一协调调度
+	--GMP模型调度
+		P状态：
+			_Pidle ：处理器没有运行用户代码或者调度器，被空闲队列或者改变其状态的结构持有，运行队列为空
+			_Prunning ：被线程 M 持有，并且正在执行用户代码或者调度器
+			_Psyscall：没有执行用户代码，当前线程陷入系统调用
+			_Pgcstop ：被线程 M 持有，当前处理器由于垃圾回收被停止
+			_Pdead ：当前处理器已经不被使用
+		G状态：
+			_Gidle：刚刚被分配并且还没有被初始化，值为0，为创建 goroutine 后的默认值
+			_Grunnable： 没有执行代码，没有栈的所有权，存储在运行队列中，可能在某个P的本地队列或全局队列中(如上图)。 _Grunning： 正在执行代码的 goroutine，拥有栈的所有权
+			_Gsyscall：正在执行系统调用，拥有栈的所有权，与 P 脱离，但是与某个 M 绑定，会在调用结束后被分配到运行队列
+			_Gwaiting：被阻塞的 goroutine，阻塞在某个 channel 的发送或者接收队列
+			_Gdead： 当前 goroutine 未被使用，没有执行代码，可能有分配的栈，分布在空闲列表 gFree，可能是一个刚刚初始化的goroutine，也可能是执行了 goexit 退出的 goroutine
+			_Gcopystac：栈正在被拷贝，没有执行代码，不在运行队列上，执行权在
+			_Gscan ： GC 正在扫描栈空间，没有执行代码，可以与其他状态同时存在
+		G位置：
+			• 进程都有一个全局G队列
+			• 每个P都有自己的本地G队列
+			• 处于 channel 阻塞态的 G 被放在 sudog
+			• 脱离 P 绑定在 M 上的 G，如系统调用
+			• 为了复用，执行结束进入 P 的 gFree 列表中的 G
+		goroutine创建过程：
+			• 获取或者创建新的 Goroutine 结构体
+			• 从处理器的 gFree 列表中查找空闲的 Goroutine
+			• 如果不存在空闲的 Goroutine，会通过 runtime.malg 创建一个栈大小足够的新结构体
+			• 将函数传入的参数移到 Goroutine 的栈上
+			• 更新 Goroutine 调度相关的属性，更新状态为_Grunnable
+			• 返回的 Goroutine 会存储到全局变量 allgs 中
+			• Goroutine 设置到处理器的 runnext 作为下一个处理器执行的任务
+			• 当处理器的本地运行队列已经没有剩余空间时(256)，就会把本地队列中的一部分 Goroutine和待加入的 Goroutine 通过 runtime.runqputslow 添加到调度器持有的全局运行队列上
+		P调度特点：
+			• 为了保证公平，当全局运行队列中有待执行的 Goroutine 时，通过 schedtick 保证有一定几率(1/61)会从全局的运行队列中查找对应的 Goroutine
+			• 从处理器本地的运行队列中查找待执行的 Goroutine
+			• 如果前两种方法都没有找到 Goroutine，会通过 runtime.findrunnable 进行阻塞地查找Goroutine
+			• 从本地运行队列、全局运行队列中查找
+			• 从网络轮询器中查找是否有 Goroutine 等待运行
+			• 通过 runtime.runqsteal 尝试从其他随机的处理器中窃取一半待运行的 Goroutine
+	--堆内存管理
+		堆内存管理：
+			mutator(用户程序)-->allocator(给用户程序分配内存)-->heap(堆内存)<--collector(垃圾回收，利用object header同步对象元数据)
+	--TCMalloc
+		• page:内存页，一块 8K 大小的内存空间。Go 与操作系统之间的内存申请和释放，都是以page 为单位的
+		• span: 内存块，一个或多个连续的 page 组成一个 span 
+		• sizeclass : 空间规格，每个 span 都带有一个 sizeclass ，标记着该 span 中的 page 应该如何使用
+		• object : 对象，用来存储一个变量数据内存空间，一个 span 在初始化时，会被切割成一堆等大的 object ；假设 object 的大小是 16B ，span 大小是 8K ，那么就会把 span 中的 page 就会被初始化 8K / 16B = 512 个 object ，所谓内存分配，就是分配一个 object 出去
+		• 对象大小定义
+			• 小对象大小：0~256KB
+			• 中对象大小：256KB~1MB
+			• 大对象大小：>1MB
+		• 小对象的分配流程
+			• ThreadCache -> CentralCache -> HeapPage，大部分时候，ThreadCache 缓存都是足够的，不需要去访问CentralCache 和 HeapPage，无系统调用配合无锁分配，分配效率是非常高的
+		• 中对象分配流程
+			• 直接在 PageHeap 中选择适当的大小即可，128 Page 的 Span 所保存的最大内存就是 1MB
+		• 大对象分配流程
+			• 从 large span set 选择合适数量的页面组成 span，用来存储数据
+	--go语言内存分配
+		• mcache：小对象的内存分配直接走
+			• size class 从 1 到 66，每个 class 两个 span
+			• Span 大小是 8KB，按 span class 大小切分
+		• mcentral
+			• Span 内的所有内存块都被占用时，没有剩余空间继续分配对象，mcache 会向 mcentral 申请1个span，mcache 拿到 span 后继续分配对象
+			• 当 mcentral 向 mcache 提供 span 时，如果没有符合条件的 span，mcentral 会向 mheap 申请span
+		• mheap
+			• 当 mheap 没有足够的内存时，mheap 会向 OS 申请内存
+			• Mheap 把 Span 组织成了树结构，而不是链表
+			• 然后把 Span 分配到 heapArena 进行管理，它包含地址映射和 span 是否包含指针等位图
+				• 为了更高效的分配、回收和再利用内存
+	--mspan
+		• allocBits
+			• 记录了每块内存分配的情况
+		• gcmarkBits
+			• 记录了每块内存的引用情况，标记阶段对每块内存进行标记，有对象引用的内存标记为1，没有的标记为 0
+		• 前后数据结构是完全一致的，标记结束则进行内存回收，回收的时候，将 allocBits 指 向 gcmarkBits，标记过的则存在，未进行标记的则进行回收	
+	--GC流程
+		Golang GC 的大部分处理是和用户代码并行的
+			• Mark：• Mark Prepare: 初始化 GC 任务，包括开启写屏障 (write barrier) 和辅助 GC(mutator assist)，统计root对象的任务数量等。这个过程需要STW
+			• GC Drains: 扫描所有 root 对象，包括全局指针和 goroutine(G) 栈上的指针（扫描对应 G 栈时需停止该 G)，将其加入标记队列(灰色队列)，并循环处理灰色队列的对象，直到灰色队列为空。该过程后台并行执行
+			• Mark Termination：完成标记工作，重新扫描(re-scan)全局指针和栈。因为 Mark 和用户程序是并行的，所以在 Mark 过程中可能会有新的对象分配和指针赋值，这个时候就需要通过写屏障（write barrier）记录下来，re-scan 再检查一下，这个过程也是会 STW 的 • Sweep：按照标记结果回收所有的白色对象，该过程后台并行执行
+			• Sweep Termination：对未清扫的 span 进行清扫, 只有上一轮的 GC 的清扫工作完成才可以开始新一轮的 GC
+	--三色标记
+		• GC 开始时，认为所有 object 都是 白色，即垃圾
+		• 从 root 区开始遍历，被触达的 object 置成 灰色
+		• 遍历所有灰色 object，将他们内部的引用变量置成 灰色，自身置成 黑色
+		• 循环第 3 步，直到没有灰色 object 了，只剩下了黑白两种，白色的都是垃圾
+		• 对于黑色 object，如果在标记期间发生了写操作，写屏障会在真正赋值前将新对象标记为 灰色
+		• 标记过程中，mallocgc 新分配的 object，会先被标记成 黑色 再返回
+	--垃圾回收触发机制
+		• 内存分配量达到阀值触发 GC
+			• 每次内存分配时都会检查当前内存分配量是否已达到阀值，如果达到阀值则立即启动 GC。 
+				• 阀值 = 上次 GC 内存分配量 * 内存增长率
+				• 内存增长率由环境变量 GOGC 控制，默认为 100，即每当内存扩大一倍时启动 GC。 
+		• 定期触发 GC
+			• 默认情况下，最长 2 分钟触发一次 GC，这个间隔在 src/runtime/proc.go:forcegcperiod 变量中被声明
+		• 手动触发
+			• 程序代码中也可以使用 runtime.GC()来手动触发 GC。这主要用于 GC 性能测试和统计。
+			
+---go语言依赖管理
+	--vendor
+		• 自 1.6 版本，支持 vendor 目录，在每个 Go 语言项目中，创建一个名叫 vendor 的目录，并将依赖拷贝至该目录。
+		• Go 语言项目会自动将 vendor 目录作为自身的项目依赖路径
+	--go mod
+		• 切换 mod 开启模式：export GO111MODULE=on/off/auto
+		• 初始化 Go 模块
+			• go mod init
+		• 下载依赖包
+			• go mod download（下载的依赖包在$GOPATH/pkg，如果没有设置 GOPATH，则下载在项目根目录/pkg） • 在源代码中使用某个依赖包，如 github.com/emicklei/go-restful
+		• 添加缺少的依赖并为依赖包瘦身
+			• go mod tidy
+		• 把 Go 依赖模块添加到 vendor 目录
+			• go mod vendor
+	--goproxy和goprivate
+		• goproxy为go拉取依赖设置代理
+			• export GOPROXY=https://goproxy.cn
+		• goprivate私有代码仓库，无法直接连接，需要申明使用
+			• GOPRIVATE=*.corp.example.com
+			• GOPROXY=proxy.example.com
+			• GONOPROXY=myrepo.corp.example.com
+	--makefile
+		https://www.cnblogs.com/iamfy/archive/2012/04/20/2459497.html
+		
+---性能分析
+	--dlv调试工具
+		https://www.jianshu.com/p/7373042bba83
+	--pprof
+		-生成profile文件来分析
+			• CPU Profiling: 在代码中添加 CPUProfile 代码，runtime/pprof 包提供支持
+				var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+				func main() {
+					flag.Parse()
+					if *cpuprofile != "" { 
+						f, err := os.Create(*cpuprofile)
+						if err != nil {
+							log.Fatal(err)
+						}
+						pprof.StartCPUProfile(f)
+						defer pprof.StopCPUProfile()
+					} 
+				}
+			注：执行后生成/tmp/cpuprofile文件，使用命令go tool pprof /tmp/cpuprofile查看
+			• 除上面示例的，类似还有
+				• CPU profile
+					• 程序的 CPU 使用情况，每 100 毫秒采集一次 CPU 使用情况
+				• Memory Profile
+					• 程序的内存使用情况
+				• Block Profiling
+					• 非运行态的 goroutine 细节，分析和查找死锁
+				• Goroutine Profiling
+					• 所有 goroutines 的细节状态，有哪些 goroutine，它们的调用关系是怎样的
+		-通过http服务访问来分析
+			Import (
+				"net/http/pprof"
+			) 
+			func startHTTP(addr string, s *tnetd.Server) {
+				mux := http.NewServeMux()
+				mux.HandleFunc(“/debug/pprof/”, pprof.Index)
+				mux.HandleFunc(“/debug/pprof/profile”, pprof.Profile)
+				mux.HandleFunc(“/debug/pprof/symbol”, pprof.Symbol)
+				mux.HandleFunc(“/debug/pprof/trace”, pprof.Trace)
+				server := &http.Server{
+					Addr: addr,
+					Handler: mux,
+				}
+				server.ListenAndServe()
+			}
+			通过http访问来查看结果：
+				• 分析 goroutine 运行情况
+					• curl localhost/debug/pprof/goroutine?debug=2
+				• 分析堆内存使用情况
+					• curl localhost/debug/pprof/heap?debug=2
+			注：kubernetes中大量组件都提供了此种方式的性能分析入口
+			
+---httpserver
+package main
+
+import (
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"strings"
+        //"time"
+        "io/ioutil"
+)
+
+func index(w http.ResponseWriter, r *http.Request){
+	//3.设置version
+	os.Setenv("VERSION", "v1")
+	version := os.Getenv("VERSION")
+	w.Header().Set("VERSION", version)
+	fmt.Printf("os version: %s \n", version)
+
+	//2.将requst中的header放到reponse中
+	for k, v := range r.Header {
+		for _, vv := range v {
+			fmt.Printf("%s: %s\n", k, v)
+			w.Header().Set(k, vv)
+		}
+	}
+	//4.记录日志并输出
+	clientip := ClientIP(r)
+        uri := RequestUri(r)
+	//fmt.Println(r.RemoteAddr)
+        if _,err := ioutil.ReadAll(r.Body);err == nil {
+                //t1 := time.Now().Unix()
+                //date := time.Unix(t1, 0).String()
+	        log.Printf("ClientIP:%s Uri:%s Response code:%d", clientip,uri,200)
+        }
+}
+
+//5.健康检查
+func healthz(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "code: 200\n")
+}
+
+/*
+func getCurrentIP(r *http.Request) string {
+	ip := r.Header.Get("X-Real-IP")
+	if ip == "" {
+		// 当请求头不存在即不存在代理时直接获取ip
+		ip = strings.Split(r.RemoteAddr, ":")[0]
+	}
+	return ip
+}
+*/
+
+// 解析RemoteAddr、X-Real-IP和X-Forwarded-For
+func ClientIP(r *http.Request) string {
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	ip := strings.TrimSpace(strings.Split(xForwardedFor, ",")[0])
+	if ip != "" {
+		return ip
+	}
+	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	if ip != "" {
+		return ip
+	}
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		return ip
+	}
+	return ""
+}
+
+func RequestUri(r *http.Request) string {
+	url := r.RequestURI
+        return url
+
+}
+
+func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", index)
+	mux.HandleFunc("/healthz", healthz)
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatalf("Start http server failed, error: %s\n", err.Error())
+	}
+}
+
+---多生产者多消费者
+package main
+import (
+	   "fmt"
+	    "strconv"   
+		"sync"   
+		"time"
+)
+		
+var fmeng = false
+func producer(threadID int, wg *sync.WaitGroup, ch chan string)  {
+	   count := 0   
+	   for !fmeng {
+		        time.Sleep(time.Second * 1)
+				count ++
+				data := strconv.Itoa(threadID) + "---" + strconv.Itoa(count)
+				fmt.Printf("producer, %s\n", data)
+				ch <- data
+		}
+		wg.Done()
+}
+
+func consumer(wg *sync.WaitGroup, ch chan string)  {   
+	for data := range ch {      
+		time.Sleep(time.Second * 1)      
+		fmt.Printf("consumer, %s\n", data)   
+		}   
+		wg.Done()
+}
+	
+func main() {   
+	// 多个生产者和多个消费者模式   
+	chanSteam := make(chan string, 10)   
+	//生产者和消费者计数器   
+	wgPd := new(sync.WaitGroup)   
+	wgCs := new(sync.WaitGroup)   
+	// 3个生产者   
+	for i := 0; i < 3; i ++ {      
+		wgPd.Add(1)      
+		go producer(i, wgPd, chanSteam)   
+		}   
+	// 2个消费者   
+	for j := 0; j < 2; j ++ {      
+		wgCs.Add(1)      
+		go consumer(wgCs, chanSteam)   
+		}   
+	// 制造超时   
+	go func() {      
+		time.Sleep(time.Second * 3)      
+		fmeng = true   
+		}()   
+	wgPd.Wait()   
+	//生产完成 关闭channel   
+	close(chanSteam)   
+	wgCs.Wait()
+}
